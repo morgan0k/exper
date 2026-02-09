@@ -1,16 +1,13 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { SYSTEM_PROMPT } from "../constants.tsx";
+import { SYSTEM_PROMPT } from "../constants";
 
-// Безопасное получение ключа из глобального объекта
 const getApiKey = () => (window as any).process?.env?.API_KEY || "";
 
 export async function askAssistant(userPrompt: string, history: { role: string, parts: { text: string }[] }[] = []) {
   try {
     const apiKey = getApiKey();
-    if (!apiKey) {
-      return "Для работы ИИ-ассистента требуется API ключ. Пожалуйста, настройте его.";
-    }
+    if (!apiKey) return "API ключ не настроен.";
 
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
@@ -25,9 +22,9 @@ export async function askAssistant(userPrompt: string, history: { role: string, 
       },
     });
     
-    return response.text || "Извините, я не смог обработать ваш запрос.";
+    return response.text || "Ошибка обработки запроса.";
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Произошла ошибка при связи с ассистентом. Проверьте соединение или API ключ.";
+    return "Произошла ошибка при связи с ассистентом.";
   }
 }

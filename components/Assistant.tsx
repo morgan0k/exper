@@ -1,10 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { askAssistant } from '../services/geminiService.ts';
+import { askAssistant } from '../services/geminiService';
 
 const Assistant: React.FC = () => {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
-    { role: 'assistant', content: 'Привет! Я ваш гид по бонусной программе LoyaltyPro. Спрашивайте что угодно!' }
+    { role: 'assistant', content: 'Привет! Я ваш гид по LoyaltyPro. Спрашивайте что угодно!' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
@@ -18,7 +18,6 @@ const Assistant: React.FC = () => {
 
   const handleSend = async () => {
     if (!input.trim()) return;
-    
     const userMsg = input.trim();
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
@@ -41,24 +40,14 @@ const Assistant: React.FC = () => {
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm ${
               m.role === 'user' 
-                ? 'bg-indigo-600 text-white rounded-tr-none shadow-md' 
+                ? 'bg-indigo-600 text-white rounded-tr-none' 
                 : 'bg-white text-gray-800 rounded-tl-none border border-gray-100 shadow-sm'
             }`}>
               {m.content}
             </div>
           </div>
         ))}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="bg-white px-4 py-3 rounded-2xl rounded-tl-none border border-gray-100 shadow-sm">
-              <div className="flex space-x-1">
-                <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce"></div>
-                <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="w-1.5 h-1.5 bg-gray-300 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-              </div>
-            </div>
-          </div>
-        )}
+        {isTyping && <div className="p-2 text-xs text-gray-400">Ассистент печатает...</div>}
       </div>
 
       <div className="p-4 bg-white border-t border-gray-100">
@@ -66,17 +55,12 @@ const Assistant: React.FC = () => {
           <input
             type="text"
             className="flex-1 bg-transparent px-4 py-2 text-sm outline-none"
-            placeholder="Задайте вопрос ассистенту..."
+            placeholder="Задать вопрос..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
           />
-          <button
-            onClick={handleSend}
-            className="bg-indigo-600 text-white p-2 rounded-xl shadow-lg shadow-indigo-100 active:scale-95 transition-transform"
-          >
-            🚀
-          </button>
+          <button onClick={handleSend} className="bg-indigo-600 text-white p-2 rounded-xl">🚀</button>
         </div>
       </div>
     </div>
