@@ -1,7 +1,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import App from './App.tsx';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -15,8 +15,12 @@ try {
       <App />
     </React.StrictMode>
   );
-  console.log("LoyaltyPro rendered successfully");
+  console.log("Application initialized successfully");
 } catch (err) {
-  console.error("Render error:", err);
-  document.body.innerHTML += `<div style="color:red; padding:20px;">Render Error: ${err.message}</div>`;
+  console.error("Initialization error:", err);
+  const debug = document.getElementById('debug-console');
+  if (debug) {
+    debug.style.display = 'block';
+    debug.innerText += "\nRender Error: " + err.message;
+  }
 }

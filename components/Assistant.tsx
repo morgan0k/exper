@@ -1,10 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { askAssistant } from '../services/geminiService';
+import { askAssistant } from '../services/geminiService.ts';
 
 const Assistant: React.FC = () => {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
-    { role: 'assistant', content: 'Привет! Я ваш ИИ-помощник LoyaltyPro. Чем могу помочь?' }
+    { role: 'assistant', content: 'Привет! Я ваш ИИ-помощник LoyaltyPro. Могу рассказать о правилах программы или о доступных наградах. О чем хотите узнать?' }
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +36,7 @@ const Assistant: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] p-3 rounded-2xl text-sm shadow-sm ${
+            <div className={`max-w-[85%] p-4 rounded-2xl text-sm shadow-sm ${
               m.role === 'user' 
                 ? 'bg-indigo-600 text-white rounded-br-none' 
                 : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
@@ -45,19 +45,31 @@ const Assistant: React.FC = () => {
             </div>
           </div>
         ))}
-        {isLoading && <div className="text-[10px] text-gray-400 font-bold uppercase animate-pulse">Ассистент думает...</div>}
+        {isLoading && (
+          <div className="flex items-center space-x-2 text-indigo-400 p-2">
+            <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce"></div>
+            <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:0.2s]"></div>
+            <div className="w-1.5 h-1.5 bg-current rounded-full animate-bounce [animation-delay:0.4s]"></div>
+          </div>
+        )}
         <div ref={endRef} />
       </div>
       <div className="p-4 bg-white border-t border-gray-100">
         <div className="flex space-x-2">
           <input
-            className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-indigo-500"
-            placeholder="Ваш вопрос..."
+            className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-5 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+            placeholder="Ваш вопрос ассистенту..."
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && onSend()}
           />
-          <button onClick={onSend} className="bg-indigo-600 text-white p-2 rounded-xl">🚀</button>
+          <button 
+            onClick={onSend} 
+            disabled={!input.trim() || isLoading}
+            className="bg-indigo-600 text-white p-3 rounded-2xl shadow-lg shadow-indigo-100 active:scale-90 disabled:opacity-50 transition-all"
+          >
+            🚀
+          </button>
         </div>
       </div>
     </div>

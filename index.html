@@ -17,13 +17,14 @@
             color: #1f2937;
         }
         #root:empty::before {
-            content: 'Запуск системы...';
+            content: 'Запуск LoyaltyPro...';
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
             color: #6366f1;
             font-weight: 600;
+            font-size: 1.1rem;
         }
         #debug-console {
             display: none;
@@ -43,20 +44,12 @@
         }
     </style>
     <script>
-        // Глобальный перехват ошибок
         window.process = { env: { API_KEY: "" } };
         window.addEventListener('error', function(event) {
-            const console = document.getElementById('debug-console');
-            if (console) {
-                console.style.display = 'block';
-                console.innerText += '\n[ERROR] ' + (event.error ? event.error.stack : event.message);
-            }
-        });
-        window.addEventListener('unhandledrejection', function(event) {
-            const console = document.getElementById('debug-console');
-            if (console) {
-                console.style.display = 'block';
-                console.innerText += '\n[REJECTION] ' + event.reason;
+            const consoleBox = document.getElementById('debug-console');
+            if (consoleBox) {
+                consoleBox.style.display = 'block';
+                consoleBox.innerText += '\n[ERROR] ' + (event.error ? event.error.stack : event.message);
             }
         });
     </script>
@@ -75,7 +68,7 @@
 </head>
 <body>
     <div id="root"></div>
-    <div id="debug-console"><strong>Ошибка инициализации:</strong></div>
+    <div id="debug-console"><strong>Техническая информация:</strong></div>
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>
