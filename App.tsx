@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout.tsx';
-import Registration from './components/Registration.tsx';
-import Dashboard from './components/Dashboard.tsx';
-import Rewards from './components/Rewards.tsx';
-import Assistant from './components/Assistant.tsx';
-import { User, Transaction, AppScreen } from './types.ts';
-import { MOCK_REWARDS } from './constants.tsx';
+import Layout from './components/Layout';
+import Registration from './components/Registration';
+import Dashboard from './components/Dashboard';
+import Rewards from './components/Rewards';
+import Assistant from './components/Assistant';
+import { User, Transaction, AppScreen } from './types';
+import { MOCK_REWARDS } from './constants';
 
 declare global {
   interface Window {
@@ -27,18 +27,18 @@ const App: React.FC = () => {
         tg.ready();
         tg.expand();
       } catch (e) {
-        console.error("Telegram SDK init error:", e);
+        console.warn("Telegram SDK warning:", e);
       }
     }
 
-    const saved = localStorage.getItem('loyalty_user');
+    const saved = localStorage.getItem('loyalty_user_v1');
     if (saved) {
       try {
         const parsedUser = JSON.parse(saved);
         setUser(parsedUser);
         setScreen(AppScreen.HOME);
       } catch (e) {
-        localStorage.removeItem('loyalty_user');
+        localStorage.removeItem('loyalty_user_v1');
       }
     }
     setIsInitialized(true);
@@ -46,32 +46,18 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem('loyalty_user', JSON.stringify(user));
+      localStorage.setItem('loyalty_user_v1', JSON.stringify(user));
     }
   }, [user]);
-
-  useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    if (!tg) return;
-
-    if (screen !== AppScreen.HOME && screen !== AppScreen.REGISTER) {
-      tg.BackButton?.show();
-      const handleBack = () => setScreen(AppScreen.HOME);
-      tg.onEvent('backButtonClicked', handleBack);
-      return () => tg.offEvent('backButtonClicked', handleBack);
-    } else {
-      tg.BackButton?.hide();
-    }
-  }, [screen]);
 
   const handleRegistration = (newUser: User) => {
     setUser(newUser);
     setScreen(AppScreen.HOME);
     setTransactions([{
-      id: 'init',
+      id: 'welcome',
       type: 'earn',
       amount: 50,
-      description: 'Приветственный бонус',
+      description: 'Приветственные баллы',
       date: new Date().toISOString()
     }]);
     
@@ -82,14 +68,14 @@ const App: React.FC = () => {
     if (!user) return;
     const amount = 100;
     const newTx: Transaction = {
-      id: Math.random().toString(),
+      id: Date.now().toString(),
       type: 'earn',
       amount,
       description: 'Покупка в магазине',
       date: new Date().toISOString()
     };
-    setTransactions([newTx, ...transactions]);
-    setUser({ ...user, points: user.points + amount });
+    setTransactions(prev => [newTx, ...prev]);
+    setUser(prev => prev ? { ...prev, points: prev.points + amount } : null);
     window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium');
   };
 
@@ -100,28 +86,25 @@ const App: React.FC = () => {
 
     const performRedeem = () => {
       const newTx: Transaction = {
-        id: Math.random().toString(),
+        id: Date.now().toString(),
         type: 'spend',
         amount: reward.cost,
         description: `Награда: ${reward.title}`,
         date: new Date().toISOString()
       };
       
-      setTransactions([newTx, ...transactions]);
-      setUser({ ...user, points: user.points - reward.cost });
+      setTransactions(prev => [newTx, ...prev]);
+      setUser(prev => prev ? { ...prev, points: prev.points - reward.cost } : null);
       window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
-      window.Telegram?.WebApp?.showAlert?.(`Успешно! Вы получили ${reward.title}.`);
+      window.Telegram?.WebApp?.showAlert?.(`Получено: ${reward.title}`);
     };
 
     if (window.Telegram?.WebApp?.showConfirm) {
-      window.Telegram.WebApp.showConfirm(
-        `Обменять ${reward.cost} баллов на ${reward.title}?`,
-        (confirmed: boolean) => {
-          if (confirmed) performRedeem();
-        }
-      );
-    } else {
-      if (confirm(`Обменять ${reward.cost} баллов?`)) performRedeem();
+      window.Telegram.WebApp.showConfirm(`Обменять ${reward.cost} баллов?`, (ok: boolean) => {
+        if (ok) performRedeem();
+      });
+    } else if (confirm(`Обменять ${reward.cost} баллов?`)) {
+      performRedeem();
     }
   };
 
@@ -153,42 +136,35 @@ const App: React.FC = () => {
       )}
       {screen === AppScreen.PROFILE && (
         <div className="p-6 space-y-6">
-          <header className="text-center">
-            <div className="w-24 h-24 rounded-full bg-indigo-50 mx-auto mb-4 border-4 border-white shadow-lg flex items-center justify-center text-4xl overflow-hidden text-indigo-300">
+          <div className="text-center bg-white p-8 rounded-3xl shadow-sm border border-gray-100">
+            <div className="w-20 h-20 rounded-full bg-indigo-50 mx-auto mb-4 flex items-center justify-center text-3xl overflow-hidden border-2 border-indigo-100">
               {window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ? (
-                <img src={window.Telegram.WebApp.initDataUnsafe.user.photo_url} alt="Ava" className="w-full h-full object-cover" />
+                <img src={window.Telegram.WebApp.initDataUnsafe.user.photo_url} alt="" className="w-full h-full object-cover" />
               ) : "👤"}
             </div>
             <h2 className="text-xl font-bold text-gray-800">{user.firstName} {user.lastName}</h2>
-            <p className="text-gray-500 text-sm">{user.email}</p>
-          </header>
+            <p className="text-gray-400 text-xs mt-1 uppercase tracking-widest font-bold text-indigo-500">{user.level} Member</p>
+          </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="p-4 border-b border-gray-50 flex justify-between items-center">
-              <span className="text-gray-500 text-sm">Телефон</span>
-              <span className="font-medium text-gray-800">{user.phone}</span>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 divide-y divide-gray-50">
+            <div className="p-4 flex justify-between items-center">
+              <span className="text-gray-400 text-sm">Телефон</span>
+              <span className="font-medium">{user.phone}</span>
             </div>
-            <div className="p-4 border-b border-gray-50 flex justify-between items-center">
-              <span className="text-gray-500 text-sm">Статус</span>
-              <span className="font-medium text-indigo-600 font-bold">{user.level}</span>
+            <div className="p-4 flex justify-between items-center">
+              <span className="text-gray-400 text-sm">Email</span>
+              <span className="font-medium">{user.email}</span>
             </div>
           </div>
 
           <button
             onClick={() => {
-              const logout = () => {
-                localStorage.removeItem('loyalty_user');
-                window.location.reload();
-              };
-              if (window.Telegram?.WebApp?.showConfirm) {
-                window.Telegram.WebApp.showConfirm("Выйти из аккаунта?", (ok: boolean) => { if (ok) logout(); });
-              } else if (confirm("Выйти?")) {
-                logout();
-              }
+              localStorage.removeItem('loyalty_user_v1');
+              window.location.reload();
             }}
-            className="w-full py-4 text-red-500 font-bold text-sm bg-red-50 rounded-2xl active:scale-95 transition-transform"
+            className="w-full py-4 text-red-500 font-bold text-sm bg-red-50 rounded-2xl"
           >
-            Выйти из аккаунта
+            Выйти
           </button>
         </div>
       )}

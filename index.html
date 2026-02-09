@@ -14,59 +14,52 @@
             margin: 0;
             padding: 0;
             background-color: #f9fafb;
+            color: #1f2937;
         }
         #root:empty::before {
-            content: 'Загрузка LoyaltyPro...';
+            content: 'Запуск системы...';
             display: flex;
             align-items: center;
             justify-content: center;
             height: 100vh;
             color: #6366f1;
             font-weight: 600;
-            font-size: 1.1rem;
         }
-        #error-display {
+        #debug-console {
             display: none;
             position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #fee2e2;
-            border: 1px solid #ef4444;
-            color: #b91c1c;
-            padding: 15px;
-            border-radius: 12px;
-            z-index: 10000;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #fff;
+            color: #ef4444;
+            padding: 20px;
+            z-index: 99999;
             font-family: monospace;
-            font-size: 12px;
+            font-size: 13px;
+            overflow: auto;
             white-space: pre-wrap;
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
         }
     </style>
-    
     <script>
-      window.process = {
-        env: { API_KEY: "" }
-      };
-
-      // Ловушка для ошибок загрузки модулей
-      window.addEventListener('error', function(e) {
-        var display = document.getElementById('error-display');
-        if (display) {
-          display.style.display = 'block';
-          display.innerText += '\nError: ' + e.message + ' at ' + e.filename + ':' + e.lineno;
-        }
-      }, true);
-
-      window.addEventListener('unhandledrejection', function(e) {
-        var display = document.getElementById('error-display');
-        if (display) {
-          display.style.display = 'block';
-          display.innerText += '\nPromise Rejection: ' + e.reason;
-        }
-      });
+        // Глобальный перехват ошибок
+        window.process = { env: { API_KEY: "" } };
+        window.addEventListener('error', function(event) {
+            const console = document.getElementById('debug-console');
+            if (console) {
+                console.style.display = 'block';
+                console.innerText += '\n[ERROR] ' + (event.error ? event.error.stack : event.message);
+            }
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            const console = document.getElementById('debug-console');
+            if (console) {
+                console.style.display = 'block';
+                console.innerText += '\n[REJECTION] ' + event.reason;
+            }
+        });
     </script>
-
     <script type="importmap">
 {
   "imports": {
@@ -82,7 +75,7 @@
 </head>
 <body>
     <div id="root"></div>
-    <div id="error-display"><strong>Техническая ошибка:</strong></div>
+    <div id="debug-console"><strong>Ошибка инициализации:</strong></div>
     <script type="module" src="./index.tsx"></script>
 </body>
 </html>

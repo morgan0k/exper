@@ -1,13 +1,11 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { SYSTEM_PROMPT } from "../constants.tsx";
+import { SYSTEM_PROMPT } from "../constants";
 
-const getApiKey = () => (window as any).process?.env?.API_KEY || "";
-
-export async function askAssistant(userPrompt: string, history: { role: string, parts: { text: string }[] }[] = []) {
+export async function askAssistant(userPrompt: string, history: any[] = []) {
   try {
-    const apiKey = getApiKey();
-    if (!apiKey) return "API ключ не настроен.";
+    const apiKey = (window as any).process?.env?.API_KEY;
+    if (!apiKey) return "Система ИИ временно недоступна (отсутствует ключ).";
 
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
@@ -22,9 +20,9 @@ export async function askAssistant(userPrompt: string, history: { role: string, 
       },
     });
     
-    return response.text || "Ошибка обработки запроса.";
+    return response.text || "Не удалось получить ответ.";
   } catch (error) {
-    console.error("Gemini Error:", error);
-    return "Произошла ошибка при связи с ассистентом.";
+    console.error("AI Error:", error);
+    return "Произошла ошибка при обращении к ассистенту.";
   }
 }
