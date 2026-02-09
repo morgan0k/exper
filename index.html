@@ -5,7 +5,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>LoyaltyPro</title>
-    <!-- Telegram WebApp SDK -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -15,21 +14,25 @@
             -webkit-tap-highlight-color: transparent;
             background-color: var(--tg-theme-bg-color, #f9fafb);
             color: var(--tg-theme-text-color, #0f172a);
+            margin: 0;
+            padding: 0;
         }
-        ::-webkit-scrollbar {
-            width: 4px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
+        #root:empty::before {
+            content: 'Загрузка приложения...';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: #6366f1;
+            font-weight: 600;
         }
     </style>
     
-    <!-- Фикс для работы process.env в браузере -->
     <script>
+      // Инициализация глобального объекта process до загрузки модулей
       window.process = {
         env: {
-          API_KEY: "" // Ключ будет подставлен средой выполнения
+          API_KEY: "" 
         }
       };
     </script>
@@ -49,7 +52,6 @@
 </head>
 <body class="bg-gray-50 text-slate-900">
     <div id="root"></div>
-    <!-- Явное подключение входной точки приложения -->
-    <script type="module" src="index.tsx"></script>
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>

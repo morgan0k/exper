@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import Layout from './components/Layout';
-import Registration from './components/Registration';
-import Dashboard from './components/Dashboard';
-import Rewards from './components/Rewards';
-import Assistant from './components/Assistant';
-import { User, Transaction, AppScreen } from './types';
-import { MOCK_REWARDS } from './constants';
+import Layout from './components/Layout.tsx';
+import Registration from './components/Registration.tsx';
+import Dashboard from './components/Dashboard.tsx';
+import Rewards from './components/Rewards.tsx';
+import Assistant from './components/Assistant.tsx';
+import { User, Transaction, AppScreen } from './types.ts';
+import { MOCK_REWARDS } from './constants.tsx';
 
 declare global {
   interface Window {
