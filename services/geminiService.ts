@@ -1,6 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
-import { SYSTEM_PROMPT } from "../constants";
+import { SYSTEM_PROMPT } from "../constants.tsx";
 
 const getApiKey = () => (window as any).process?.env?.API_KEY || "";
 

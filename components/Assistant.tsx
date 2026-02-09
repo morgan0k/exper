@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { askAssistant } from '../services/geminiService';
+import { askAssistant } from '../services/geminiService.ts';
 
 const Assistant: React.FC = () => {
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant', content: string }[]>([
