@@ -8,7 +8,6 @@ import Assistant from './components/Assistant';
 import { User, Transaction, AppScreen } from './types';
 import { MOCK_REWARDS } from './constants';
 
-// Declare Telegram WebApp global
 declare global {
   interface Window {
     Telegram: any;
@@ -22,25 +21,25 @@ const App: React.FC = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Initialize Telegram WebApp
     const tg = window.Telegram?.WebApp;
     if (tg) {
-      tg.ready();
-      tg.expand(); // Open full height
-      
-      // Attempt to pre-fill from Telegram data
-      const tgUser = tg.initDataUnsafe?.user;
-      if (tgUser && !localStorage.getItem('loyalty_user')) {
-         // This doesn't register them yet, but will be used in Registration component
-         console.log("Found Telegram user:", tgUser);
+      try {
+        tg.ready();
+        tg.expand();
+      } catch (e) {
+        console.error("Telegram SDK init error:", e);
       }
     }
 
     const saved = localStorage.getItem('loyalty_user');
     if (saved) {
-      const parsedUser = JSON.parse(saved);
-      setUser(parsedUser);
-      setScreen(AppScreen.HOME);
+      try {
+        const parsedUser = JSON.parse(saved);
+        setUser(parsedUser);
+        setScreen(AppScreen.HOME);
+      } catch (e) {
+        localStorage.removeItem('loyalty_user');
+      }
     }
     setIsInitialized(true);
   }, []);
@@ -51,16 +50,17 @@ const App: React.FC = () => {
     }
   }, [user]);
 
-  // Sync Telegram MainButton or BackButton if needed
   useEffect(() => {
     const tg = window.Telegram?.WebApp;
     if (!tg) return;
 
     if (screen !== AppScreen.HOME && screen !== AppScreen.REGISTER) {
-      tg.BackButton.show();
-      tg.BackButton.onClick(() => setScreen(AppScreen.HOME));
+      tg.BackButton?.show();
+      const handleBack = () => setScreen(AppScreen.HOME);
+      tg.onEvent('backButtonClicked', handleBack);
+      return () => tg.offEvent('backButtonClicked', handleBack);
     } else {
-      tg.BackButton.hide();
+      tg.BackButton?.hide();
     }
   }, [screen]);
 
@@ -75,7 +75,6 @@ const App: React.FC = () => {
       date: new Date().toISOString()
     }]);
     
-    // Haptic feedback
     window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
   };
 
@@ -99,40 +98,46 @@ const App: React.FC = () => {
     const reward = MOCK_REWARDS.find(r => r.id === rewardId);
     if (!reward || user.points < reward.cost) return;
 
-    const newTx: Transaction = {
-      id: Math.random().toString(),
-      type: 'spend',
-      amount: reward.cost,
-      description: `Награда: ${reward.title}`,
-      date: new Date().toISOString()
+    const performRedeem = () => {
+      const newTx: Transaction = {
+        id: Math.random().toString(),
+        type: 'spend',
+        amount: reward.cost,
+        description: `Награда: ${reward.title}`,
+        date: new Date().toISOString()
+      };
+      
+      setTransactions([newTx, ...transactions]);
+      setUser({ ...user, points: user.points - reward.cost });
+      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+      window.Telegram?.WebApp?.showAlert?.(`Успешно! Вы получили ${reward.title}.`);
     };
-    
-    setTransactions([newTx, ...transactions]);
-    setUser({ ...user, points: user.points - reward.cost });
-    
-    window.Telegram?.WebApp?.showConfirm(
-      `Вы действительно хотите обменять ${reward.cost} баллов на ${reward.title}?`,
-      (confirmed: boolean) => {
-        if (confirmed) {
-          window.Telegram?.WebApp?.showAlert(`Успешно! Предъявите этот экран сотруднику.`);
-          window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+
+    if (window.Telegram?.WebApp?.showConfirm) {
+      window.Telegram.WebApp.showConfirm(
+        `Обменять ${reward.cost} баллов на ${reward.title}?`,
+        (confirmed: boolean) => {
+          if (confirmed) performRedeem();
         }
-      }
-    );
+      );
+    } else {
+      if (confirm(`Обменять ${reward.cost} баллов?`)) performRedeem();
+    }
   };
 
   if (!isInitialized) return null;
 
   if (!user || screen === AppScreen.REGISTER) {
-    // Pass TG data to Registration to pre-fill if available
     const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    return <Registration 
-              onComplete={handleRegistration} 
-              initialData={{
-                firstName: tgUser?.first_name || '',
-                lastName: tgUser?.last_name || ''
-              }} 
-            />;
+    return (
+      <Registration 
+        onComplete={handleRegistration} 
+        initialData={{
+          firstName: tgUser?.first_name || '',
+          lastName: tgUser?.last_name || ''
+        }} 
+      />
+    );
   }
 
   return (
@@ -149,7 +154,7 @@ const App: React.FC = () => {
       {screen === AppScreen.PROFILE && (
         <div className="p-6 space-y-6">
           <header className="text-center">
-            <div className="w-24 h-24 rounded-full bg-indigo-50 mx-auto mb-4 border-4 border-white shadow-lg flex items-center justify-center text-4xl overflow-hidden">
+            <div className="w-24 h-24 rounded-full bg-indigo-50 mx-auto mb-4 border-4 border-white shadow-lg flex items-center justify-center text-4xl overflow-hidden text-indigo-300">
               {window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ? (
                 <img src={window.Telegram.WebApp.initDataUnsafe.user.photo_url} alt="Ava" className="w-full h-full object-cover" />
               ) : "👤"}
@@ -171,12 +176,15 @@ const App: React.FC = () => {
 
           <button
             onClick={() => {
-              window.Telegram?.WebApp?.showConfirm("Вы уверены, что хотите выйти?", (ok: boolean) => {
-                if (ok) {
-                  localStorage.removeItem('loyalty_user');
-                  window.location.reload();
-                }
-              });
+              const logout = () => {
+                localStorage.removeItem('loyalty_user');
+                window.location.reload();
+              };
+              if (window.Telegram?.WebApp?.showConfirm) {
+                window.Telegram.WebApp.showConfirm("Выйти из аккаунта?", (ok: boolean) => { if (ok) logout(); });
+              } else if (confirm("Выйти?")) {
+                logout();
+              }
             }}
             className="w-full py-4 text-red-500 font-bold text-sm bg-red-50 rounded-2xl active:scale-95 transition-transform"
           >
