@@ -1,0 +1,7 @@
+{
+  "name": "Copy of LoyaltyPro - Telegram Bonus App",
+  "description": "Инновационное мобильное приложение для бонусной программы, интегрированное в Telegram. Включает регистрацию, управление баллами, каталог наград и умного ИИ-ассистента.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
